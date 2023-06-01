@@ -1,0 +1,99 @@
+﻿@model SpiceProject.Models.ViewModels.SubCategoryAndCategoryViewModel
+@using SpiceProject.Extensions
+
+
+
+@* this is because we created the subCategoryand category view page at that location and need to use extension methods*@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<br />
+<h2 class="text-info">Edit Sub Category</h2>
+<br />
+<partial name="_StatusMessage" model="Model.StatusMessage" /> @*this is a given partial by microsft, in the identy folder, we copied it to the shared so we can use it here *@
+<div class="border backgroundWhite row">
+    <div class="col-8 border-right">
+        <form asp-action="Edit">
+            <input type="hidden" asp-for="SubCategory.CategoryId" /> @* need this because when this form is posted, we need the category id in the controller*@
+            <input type="hidden" asp-for="SubCategory.Id" /> @*have to add this because if we are to edit something that already exists and cause our error, if we try to edit again, it wont work because id is 0, this code passes the id to fix the error *@
+            @*Model only just gives validation for the model field thats required on the client side*@
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group row">
+                <div class="col-2">
+                    @*asp-for on the label gives the name for the model field, name is called name, when passed to the input it gives the value for the name field*@
+                    @*we added a display property ontop of name that changes the name field to output "Category name"*@
+                    <label asp-for="SubCategory.CategoryId" class="col-form-label"></label>
+                </div>
+                <div class="col-5">
+                    @*we use this id below in the scripts to for the name *@
+                    <select id="ddlCategoryList" asp-for="SubCategory.CategoryId" disabled asp-items="Model.CategoryList.ToSelectListItem(Model.SubCategory.CategoryId)" class="form-control"></select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-2">
+                    @*asp-for on the label gives the name for the model field, name is called name, when passed to the input it gives the value for the name field*@
+                    @*we added a display property ontop of name that changes the name field to output "Category name"*@
+                    <label asp-for="SubCategory.Name" class="col-form-label"></label>
+                </div>
+                <div class="col-5">
+                    <input asp-for="SubCategory.Name" class="form-control" />
+                </div>
+                <span asp-validation-for="SubCategory.Name" class="text-danger"></span>
+            </div>
+            <div class="form-group row">
+                <div class="col-5 offset-3">
+                    <partial name="_EditAndBackToListButton" model="Model.SubCategory.Id" />
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="col-3 offset-1">
+        @if (Model.SubCategoryList.Count() > 0)
+        {
+            <p>Existing SubCategories: </p>
+            @* use this id to populate the infomation*@
+            <div id="SubCategoryList">
+                <ul class="list-group"></ul>
+            </div>
+        }
+    </div>
+
+
+
+</div>
+
+@section Scripts {  @*this is calling the json we created in the subcategory controller*@
+@* this validation script is in the shared file already *@
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+<script>
+    function updateSubCategoryList() {  // this is the function that calls the ajax call, need to call TWO times, when the document is ready/loaded, and whenever we select a dropdown and it changes. call it at the bottom
+        var categorySelected = document.getElementById("ddlCategoryList").value; // we used the id in the code above, called it here to populate
+        $list = $('#SubCategoryList'); // this is the id above that we are poulating the list to
+
+        $.ajax({
+            url: '/Admin/SubCategory/GetSubCategory/' + categorySelected,      // GetSubCategory is the action for method in the SubCategory path we are using
+            type: 'GET',
+            dataType: 'text',
+            success: function (data) {
+                results = JSON.parse(data); //this parses the json we passed in the GetSubCategory method
+                $list.html('');
+                $list.append('<ul class="list-group"> ')
+                for (i in results) {
+                    $list.append('<li class="list-group-item">' + results[i].text + '</li>');
+                }
+                $list.append('</ul>');
+            }
+        });
+    }
+
+
+    $(document).ready(function () {
+        updateSubCategoryList();
+    });
+
+
+</script>
+}
+
