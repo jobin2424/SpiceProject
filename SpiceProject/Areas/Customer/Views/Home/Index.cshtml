@@ -1,8 +1,99 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model SpiceProject.Models.ViewModels.IndexViewModel
+
+<br />
+
+@if (Model.Coupon.ToList().Count > 0)
+{
+    <div class=" border">
+        <div class="carousel" data-ride="carousel" data-interval="2500">
+            @for (int i = 0; i < Model.Coupon.Count(); i++)
+            {
+                if (i == 0) // note also that if  isActive(a field in the coupon model) is set to false, then it wont show in the homepage, SEE HOMECONTROLLER for implemntation
+                {
+                    <div class="carousel-item active">
+                        @{
+                            @*  Note the comma after the base64 when using in the iteration *@
+                            var base64 = Convert.ToBase64String(Model.Coupon.ToList()[i].Picture);
+                            var imgsrc = string.Format("data:image/jpg;base64,{0}", base64);
+                        }
+
+                        @*image is saved in the database, so we have to convert it to base64 then an image*@
+                        <img src="@imgsrc" height="50px" class="d-block w-100" />
+                    </div>
+                }
+                else
+                {
+                    <div class="carousel-item ">
+                        @{
+                            var base64 = Convert.ToBase64String(Model.Coupon.ToList()[i].Picture);
+                            var imgsrc = string.Format("data:image/jpg;base64,{0}", base64);
+                        }
+
+                        @*image is saved in the database, so we have to convert it to base64 then an image*@
+                        <img src="@imgsrc" height="50px" class="d-block w-100" />
+                    </div>
+                }
+            }
+        </div>
+    </div>
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<br />
+<br />
+
+<div class="backgroundWhite container">
+    @*NOTE after adding this custom styling, the display was wrong while using chrome, had to "HOLD SHIFT KEY AND THEN REFERESH PAGE AT THE SAME TIME!!" this refreshes the cache*@
+    <ul id="menu-filters" class="menu-filter-list list-inline text-center">
+        <li class="active btn btn-secondary ml-1 mr-1" data-filter=".menu-restaurant">Show All</li> @*filter is from data-filter is the keyword we are using for a data attribute which is something that is ignored by the rendering by the asp.net core when we use jquery*@
+        @*called menu-restuarant in the first div of the thumbnailareapartial.  so if show all has been clicked, we show THAT div using the menu-restataunt class,
+            if they clic anything else, like "appetizer", @Model.FirstOrDefault().Category.Name.Replace(" ", string.Empty) would run.
+                 see below, the data-filter is connected to the above code by getting the category name and then call menu-restaurtaunt class*@
+        @foreach (var item in Model.Category)
+        {
+            <li class=" ml-1 mr-1" data-filter=".@item.Name.Replace(" ", string.Empty)">@item.Name</li>
+            // if a category has a space in the name, like "menu categories" it will replace the space
+        }
+    </ul>
+
+
+    @foreach (var category in Model.Category)
+    {
+        <div class="row" id="menu-wrapper">
+            <partial name="_ThumbnailAreaPartial" model="@Model.MenuItem.Where(u=>u.Category.Name.Equals(category.Name))" />
+        </div>
+    }
 </div>
+
+
+@section Scripts{
+    <script src="https://code.jquery.com/jquery-3.3.1.js"
+            integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+            crossorigin="anonymous"></script>
+
+
+    <script>
+        var posts = $('.post');
+
+        (function ($) {
+            $("#menu-filters li").click(function () {
+                $("#menu-filters li").removeClass('active btn btn-secondary');
+                $(this).addClass('active btn btn-secondary');
+
+                //this is to toggle
+                // filter is the variable we used for data in the code above, shown as data-filter=""
+                var selectedFilter = $(this).data("filter");
+
+                $(".menu-restaurant").fadeOut();
+
+                setTimeout(function () {
+                    $(selectedFilter).slideDown();
+                }, 300);
+            });
+        })(jQuery);
+
+
+    
+      
+    </script>
+
+}
